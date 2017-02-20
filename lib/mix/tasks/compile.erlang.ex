@@ -75,9 +75,9 @@ defmodule Mix.Tasks.Compile.Erlang do
 
     Mix.Compilers.Erlang.compile(manifest(), tuples, opts, fn
       input, _output ->
-        {opts, ext} = case Path.extname(input) do
-          ".core" -> {[:from_core] ++ erlc_options, ".core"}
-          ".erl" -> {erlc_options, ".erl"}
+        {erlc_options, erl_file, ext} = case Path.extname(input) do
+          ".core" -> {[:from_core] ++ erlc_options, to_erl_file(input), ".core"}
+          ".erl" -> {erlc_options,  to_erl_file(Path.rootname(input, ".erl")), ".erl"}
         end
         # We're purging the module because a previous compiler (e.g. Phoenix)
         # might have already loaded the previous version of it.
@@ -85,8 +85,7 @@ defmodule Mix.Tasks.Compile.Erlang do
         :code.purge(module)
         :code.delete(module)
 
-        file = to_erl_file(Path.rootname(input, ext))
-        :compile.file(file, erlc_options)
+        :compile.file(erl_file, erlc_options)
     end)
   end
 
