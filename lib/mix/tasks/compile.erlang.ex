@@ -73,7 +73,7 @@ defmodule Mix.Tasks.Compile.Erlang do
              |> sort_dependencies
              |> Enum.map(&annotate_target(&1, compile_path, opts[:force]))
 
-    Mix.Compilers.Erlang.compile(manifest(), tuples, :erl, opts, fn
+    Mix.Compilers.Erlang.compile(manifest(), tuples, :erl, :beam, opts, fn
       input, _output ->
         # We're purging the module because a previous compiler (e.g. Phoenix)
         # might have already loaded the previous version of it.
@@ -85,7 +85,7 @@ defmodule Mix.Tasks.Compile.Erlang do
         :compile.file(file, erlc_options)
     end)
 
-    Mix.Compilers.Erlang.compile(manifest(), tuples, :core, opts, fn
+    Mix.Compilers.Erlang.compile(manifest(), tuples, :core, :beam, opts, fn
       input, _output ->
         # We're purging the module because a previous compiler (e.g. Phoenix)
         # might have already loaded the previous version of it.
