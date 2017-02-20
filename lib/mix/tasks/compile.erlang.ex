@@ -73,28 +73,20 @@ defmodule Mix.Tasks.Compile.Erlang do
              |> sort_dependencies
              |> Enum.map(&annotate_target(&1, compile_path, opts[:force]))
 
-    Mix.Compilers.Erlang.compile(manifest(), tuples, :erl, :beam, opts, fn
+    Mix.Compilers.Erlang.compile(manifest(), tuples, opts, fn
       input, _output ->
+        {opts, ext} = case Path.extname(input) do
+          ".core" -> {[:from_core] ++ erlc_options, ".core"}
+          ".erl" -> {erlc_options, ".erl"}
+        end
         # We're purging the module because a previous compiler (e.g. Phoenix)
         # might have already loaded the previous version of it.
-        module = Path.basename(input, ".erl") |> String.to_atom
+        module = Path.basename(input, ext) |> String.to_atom
         :code.purge(module)
         :code.delete(module)
 
-        file = to_erl_file(Path.rootname(input, ".erl"))
+        file = to_erl_file(Path.rootname(input, ext))
         :compile.file(file, erlc_options)
-    end)
-
-    Mix.Compilers.Erlang.compile(manifest(), tuples, :core, :beam, opts, fn
-      input, _output ->
-        # We're purging the module because a previous compiler (e.g. Phoenix)
-        # might have already loaded the previous version of it.
-        module = Path.basename(input, ".core") |> String.to_atom
-        :code.purge(module)
-        :code.delete(module)
-
-        file = to_erl_file(Path.rootname(input, ".core"))
-        :compile.file(file, [:from_core] ++ erlc_options)
     end)
   end
 
