@@ -58,7 +58,7 @@ defmodule Mix.Tasks.Compile.Erlang do
     project = Mix.Project.config()
     source_paths = project[:erlc_paths]
     Mix.Compilers.Erlang.assert_valid_erlc_paths(source_paths)
-    files = Mix.Utils.extract_files(source_paths, [:erl])
+    files = Mix.Utils.extract_files(source_paths, [:erl, :core])
     do_run(files, opts, project, source_paths)
   end
 
@@ -90,13 +90,18 @@ defmodule Mix.Tasks.Compile.Erlang do
     opts = [parallel: MapSet.new(find_parallel(erls))] ++ opts
 
     Erlang.compile(manifest(), tuples, opts, fn input, _output ->
+        {erlc_options, file, ext} = case Path.extname(input) do
+          ".core" -> {[:from_core] ++ erlc_options, to_erl_file(input), ".core"}
+          ".erl" -> {erlc_options, to_erl_file(Path.rootname(input, ".erl")), ".erl"}
+        end
+
       # We're purging the module because a previous compiler (for example, Phoenix)
       # might have already loaded the previous version of it.
-      module = input |> Path.basename(".erl") |> String.to_atom()
+      module = input |> Path.basename(ext) |> String.to_atom()
       :code.purge(module)
       :code.delete(module)
 
-      file = Erlang.to_erl_file(Path.rootname(input, ".erl"))
+      #file = Erlang.to_erl_file(Path.rootname(input, ext))
 
       case :compile.file(file, erlc_options) do
         # TODO: Don't handle {:error, :badarg} when we require OTP 24
