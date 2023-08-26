@@ -91,8 +91,8 @@ defmodule Mix.Tasks.Compile.Erlang do
 
     Erlang.compile(manifest(), tuples, opts, fn input, _output ->
         {erlc_options, file, ext} = case Path.extname(input) do
-          ".core" -> {[:from_core] ++ erlc_options, to_erl_file(input), ".core"}
-          ".erl" -> {erlc_options, to_erl_file(Path.rootname(input, ".erl")), ".erl"}
+          ".core" -> {[:from_core] ++ erlc_options, Erlang.to_erl_file(input), ".core"}
+          ".erl" -> {erlc_options, Erlang.to_erl_file(Path.rootname(input, ".erl")), ".erl"}
         end
 
       # We're purging the module because a previous compiler (for example, Phoenix)
